@@ -1,3 +1,6 @@
+# Results
+*.bin
+
 # Prerequisites
 *.d
 
