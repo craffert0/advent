@@ -1,4 +1,4 @@
-# -*- compile-command: "python3 02.1.py < 02.input.1.txt" -*-
+# -*- compile-command: "python3 two.py < input.txt" -*-
 
 import sys
 
@@ -18,10 +18,20 @@ def safe(report):
             return False
     return not (increase and decrease)
 
+def safer(report):
+    if safe(report):
+        return True
+    for i in range(len(report)):
+        b = list(report)
+        b.pop(i)
+        if safe(b):
+            return True
+    return False
+
 
 count = 0
 for line in sys.stdin:
     report = [int(x) for x in line.split()]
-    if safe(report):
+    if safer(report):
         count = count + 1
 print(count)
