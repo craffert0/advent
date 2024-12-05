@@ -1,10 +1,18 @@
-# -*- compile-command: "python3 one.py < input.txt" -*-
+# -*- compile-command: "python3 two.py < input.txt" -*-
 
 import sys
 from collections import defaultdict
+from functools import cmp_to_key
 
 after = defaultdict(set)
 before = defaultdict(set)
+
+def compare(x, y):
+    if y in after[x] or x in before[y]:
+        return -1
+    if x in after[y] or y in before[x]:
+        return +1
+    return 0
 
 def proper(pages):
     good = True
@@ -28,6 +36,8 @@ for line in sys.stdin:
 sum = 0
 for line in sys.stdin:
     pages = [int(x) for x in line.split(',')]
-    if proper(pages):
+    if not proper(pages):
+        pages.sort(key=cmp_to_key(compare))
+        assert(proper(pages))
         sum += pages[int((len(pages)-1)/2)]
 print(sum)
