@@ -2,6 +2,7 @@
 
 #include "shared.h"
 #include <map>
+#include <set>
 
 class Puzzle {
 public:
@@ -22,50 +23,58 @@ public:
     int sum = 0;
     for (const auto& [p, h] : map_) {
       if (h == 0) {
-        const int s = score(p, h);
-        sum += s;
-        cout << p << ": " << s << endl;
+        const auto& destinations = score(p, h);
+        sum += destinations.size();
       }
     }
     return sum;
   }
 
   void dump() const {
-    for (const auto& [p, s] : scores_) {
-      cout << p << "(" << map_.at(p) << "): " << s << endl;
+    for (const auto& [p, s] : destinations_) {
+      dump(p, s);
     }
   }
 
 private:
-  int score(const Point& p, int h) {
-    if (h == 9) {
-      return 1;
+  void dump(const Point& p, const set<Point>& s) const {
+    cout << p << "(" << map_.at(p) << "): [";
+    for (const auto& p2 : s) {
+      cout << p2 << ", ";
     }
-    if (const auto it = scores_.find(p); it != scores_.end()) {
-      return it->second;
-    }
-    int sum = 0;
-    for (int x = -1; x < 2; ++x) {
-      for (int y = -1; y < 2; ++y) {
-        const Point n(p.x() + x, p.y() + y);
-        if (const auto it = map_.find(n); it != map_.end() && it->second == h + 1) {
-          sum += score(n, h + 1);
-        }
+    cout << endl;
+  }
+
+  set<Point> score(const Point& p, int h) {
+    auto& d = destinations_[p];
+    if (d.empty()) {
+      if (h == 9) {
+        d.insert(p);
+      } else {
+        update(d, Point(p.x() - 1, p.y()), h + 1);
+        update(d, Point(p.x() + 1, p.y()), h + 1);
+        update(d, Point(p.x(), p.y() - 1), h + 1);
+        update(d, Point(p.x(), p.y() + 1), h + 1);
       }
     }
-    scores_[p] = sum;
-    return sum;
+    return d;
+  }
+
+  void update(set<Point>& s, const Point& p, int h) {
+    if (const auto it = map_.find(p); it != map_.end() && it->second == h) {
+      const auto more = score(p, h);
+      s.insert(more.begin(), more.end());
+    }
   }
 
 private:
   map<Point, int> map_;
   int cols_ = 0;
   int rows_ = 0;
-  map<Point, int> scores_;
+  map<Point, set<Point>> destinations_;
 };
 
 int main() {
   Puzzle puzzle(cin);
   cout << puzzle.solve() << endl;
-  puzzle.dump();
 }
