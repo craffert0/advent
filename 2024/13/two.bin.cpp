@@ -1,16 +1,18 @@
-/* -*- compile-command: "make -f ../../Makefile one.bin && ./one.bin < sample.txt" -*- */
+/* -*- compile-command: "make -f ../../Makefile two.bin && ./two.bin < sample.txt" -*- */
 
 #include <cassert>
 #include <charconv>
 #include <iostream>
+#include <numeric>
 #include <string>
 #include <string_view>
 
 using namespace std;
 
-static constexpr int kNoValue = 100 * 4 + 1;;
+static constexpr uint64_t kNoValue = numeric_limits<uint64_t>::max();
+static constexpr uint64_t kOffset = 10000000000000;
 
-using Coordinate = pair<int, int>;
+using Coordinate = pair<uint64_t, uint64_t>;
 
 Coordinate plus(const Coordinate& a, const Coordinate& b) {
   return { a.first + b.first, a.second + b.second };
@@ -33,11 +35,11 @@ public:
     from_chars(y.begin(), y.end(), y_);
   }
 
-  Coordinate move(int n) const { return { n * x_, n * y_ }; }
+  Coordinate move(uint64_t n) const { return { n * x_, n * y_ }; }
 
 public:
-  int x_;
-  int y_;
+  uint64_t x_;
+  uint64_t y_;
   int cost_;
 };
 
@@ -60,6 +62,8 @@ public:
 
     from_chars(x.begin(), x.end(), x_);
     from_chars(y.begin(), y.end(), y_);
+    x_ += kOffset;
+    y_ += kOffset;
   }
 
   bool after(const Coordinate& c) const { return c.first < x_ && c.second < y_; }
@@ -71,17 +75,17 @@ public:
   }
 
 public:
-  int x_;
-  int y_;
+  uint64_t x_;
+  uint64_t y_;
 };
 
 ostream& operator<<(ostream& ostr, const Prize& p) {
   return ostr << '[' << p.x_ << ", " << p.y_ << ']';
 }
 
-int compute(const Button& a, const Button& b, const Prize& p) {
-  int best = kNoValue;
-  for (int i = 0; i < 100; ++i) {
+uint64_t compute(const Button& a, const Button& b, const Prize& p) {
+  uint64_t best = kNoValue;
+  for (uint64_t i = 0; true; ++i) {
     const auto a_move = a.move(i);
     if (p.overshot(a_move)) {
       break;
@@ -90,8 +94,8 @@ int compute(const Button& a, const Button& b, const Prize& p) {
     const auto r = p.subtract(a_move);
     if (r.first % b.x_ == 0 && r.second % b.y_ == 0 &&
         r.first / b.x_ == r.second / b.y_) {
-      const int j = r.first / b.x_;
-      const int cost = i * a.cost_ + j * b.cost_;
+      const uint64_t j = r.first / b.x_;
+      const uint64_t cost = i * a.cost_ + j * b.cost_;
       if (cost < best) {
         best = cost;
       }
@@ -101,15 +105,15 @@ int compute(const Button& a, const Button& b, const Prize& p) {
 }
 
 int main() {
-  int total = 0;
+  uint64_t total = 0;
   string blank;
   do {
     string button_a;
     string button_b;
     string prize;
     assert(getline(cin, button_a) && getline(cin, button_b) && getline(cin, prize));
-    cout << button_a << " + " << button_a << " -> " << prize << endl;
-    const int cost = compute(Button(button_a, 3), Button(button_b, 1), Prize(prize));
+    cout << button_a << " + " << button_b << " -> " << prize << endl;
+    const uint64_t cost = compute(Button(button_a, 3), Button(button_b, 1), Prize(prize));
     cout << cost << endl;
     if (cost != kNoValue) {
       total += cost;
