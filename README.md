@@ -1,4 +1,5 @@
-# Advent of Code
+# Moved Permanently
+https://gitlab.com/craffert0/advent
 
 My personal work on [advent of code](https://adventofcode.com). 
 
